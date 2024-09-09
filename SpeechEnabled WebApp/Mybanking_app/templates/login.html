@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oladele Bank LTD - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .login-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            text-align: center;
+        }
+        .login-container h2 {
+            margin-bottom: 20px;
+        }
+        .login-container input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .login-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .login-container button:hover {
+            background-color: #45a049;
+        }
+        .login-container a {
+            color: #4CAF50;
+            text-decoration: none;
+            display: block;
+            margin-top: 10px;
+        }
+        .record-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .record-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Oladele Bank LTD - Homepage</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Oladele Bank LTD</h2>
+    <input type="text" placeholder="Username" id="username" aria-label="Username">
+    <input type="password" placeholder="Password" id="password" aria-label="Password">
+    <button onclick="login()" aria-label="Login">Login</button>
+    <a href="#" aria-label="Forgot Password?">Forgot Password?</a>
+
+    <!-- Record button for voice command -->
+    <button class="record-button" onclick="startRecording()" aria-label="Record Voice Command">Record</button>
+</div>
+
+<script>
+    function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        // Simple login logic for demonstration
+        if (username === "user" && password === "pass") {
+            window.location.href = "index.html";  // Ensure this matches your home page
+        } else {
+            alert("Invalid credentials");
+        }
+    }
+</script>
+
+<script>
+let mediaRecorder;
+let audioChunks = [];
+
+function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.start();
+
+            mediaRecorder.ondataavailable = event => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                audioChunks = [];
+
+                const formData = new FormData();
+                formData.append('audio', audioBlob);
+
+                fetch('http://127.0.0.1:5000/recognize', {  // Ensure the correct server URL
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    window.location.href = data.page;
+                })
+                .catch(error => {
+                    console.error('There was an error with the fetch operation:', error);
+                });
+            };
+
+            setTimeout(() => {
+                mediaRecorder.stop();
+            }, 3000); // Adjust recording time as needed
+        })
+        .catch(error => {
+            console.error('Error accessing the microphone', error);
+        });
+}
+</script>
+<!-- Include the JavaScript file -->
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

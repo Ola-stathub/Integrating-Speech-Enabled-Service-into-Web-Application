@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oladele Bank LTD - Balance</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .balance-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #333;
+        }
+        .balance {
+            margin-top: 20px;
+            font-size: 32px;
+            color: #4CAF50;
+        }
+        .record-button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .record-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+     <title>Oladele Bank LTD - Homepage</title>
+     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="balance-container">
+        <h1>Your Balance</h1>
+        <p class="balance">$12,345.67</p>
+        <!-- Record button for voice command -->
+        <button class="record-button" onclick="startRecording()" aria-label="Record Voice Command">Record</button>
+    </div>
+
+    <script>
+    let mediaRecorder;
+    let audioChunks = [];
+
+    function startRecording() {
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+
+                mediaRecorder.ondataavailable = event => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    audioChunks = [];
+
+                    const formData = new FormData();
+                    formData.append('audio', audioBlob);
+
+                    fetch('http://127.0.0.1:5000/recognize', {  // Ensure the correct server URL
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        window.location.href = data.page;
+                    })
+                    .catch(error => {
+                        console.error('There was an error with the fetch operation:', error);
+                    });
+                };
+
+                setTimeout(() => {
+                    mediaRecorder.stop();
+                }, 3000); // Adjust recording time as needed
+            })
+            .catch(error => {
+                console.error('Error accessing the microphone', error);
+            });
+    }
+    </script>
+    <!-- Include the JavaScript file -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
